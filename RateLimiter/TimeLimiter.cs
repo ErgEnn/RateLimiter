@@ -17,7 +17,10 @@ namespace RateLimiter
         internal TimeLimiter(IAwaitableConstraint awaitableConstraint)
         {
             _AwaitableConstraint = awaitableConstraint;
+            ThrottledObservable = _AwaitableConstraint;
         }
+
+        public IObservable<ThrottleInfo> ThrottledObservable { get; }
 
         /// <summary>
         /// Perform the given task respecting the time constraint

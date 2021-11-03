@@ -7,7 +7,7 @@ namespace RateLimiter
     /// <summary>
     /// Represents a time constraints that can be awaited
     /// </summary>
-    public interface IAwaitableConstraint
+    public interface IAwaitableConstraint : IObservable<ThrottleInfo>
     {
         /// <summary>
         /// returns a task that will complete once the constraint is fulfilled

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,6 +27,7 @@ namespace RateLimiter
         private TimeSpan _TimeSpan { get; }
         private SemaphoreSlim _Semaphore { get; } = new SemaphoreSlim(1, 1);
         private ITime _Time { get; }
+        private Subject<ThrottleInfo> _Subject = new Subject<ThrottleInfo>();
 
         /// <summary>
         /// Constructs a new AwaitableConstraint based on number of times per duration
@@ -81,6 +83,7 @@ namespace RateLimiter
             var timeToWait = last.Value.Add(_TimeSpan) - now;
             try
             {
+                _Subject.OnNext(new ThrottleInfo(timeToWait));
                 await _Time.GetDelay(timeToWait, cancellationToken);
             }
             catch (Exception)
@@ -115,6 +118,11 @@ namespace RateLimiter
         /// <param name="now"></param>
         protected virtual void OnEnded(DateTime now)
         {
+        }
+
+        public IDisposable Subscribe(IObserver<ThrottleInfo> observer)
+        {
+            return _Subject.Subscribe(observer);
         }
     }
 }

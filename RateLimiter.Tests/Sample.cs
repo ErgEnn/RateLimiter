@@ -9,6 +9,7 @@ using FluentAssertions;
 using RateLimiter.Tests.TestClass;
 using ComposableAsync.Factory;
 using System.Diagnostics;
+using System.Linq;
 
 namespace RateLimiter.Tests
 {
@@ -26,11 +27,12 @@ namespace RateLimiter.Tests
             _Output.WriteLine($"{DateTime.Now:MM/dd/yyy HH:mm:ss.fff}");
         }
 
-        [Fact(Skip = "for demo purpose only")]
+        [Fact]//(Skip = "for demo purpose only")]
         public async Task SimpleUsage()
         {
             var timeConstraint = TimeLimiter.GetFromMaxCountByInterval(5, TimeSpan.FromSeconds(1));
-
+            timeConstraint.ThrottledObservable.Subscribe(info =>
+                _Output.WriteLine($"Throttling for {info.ThrottledForTimeSpan.TotalMilliseconds} ms"));
             for (int i = 0; i < 1000; i++)
             {
                 await timeConstraint.Enqueue(() => ConsoleIt());
@@ -124,13 +126,23 @@ namespace RateLimiter.Tests
             res.Should().BeLessOrEqualTo(56);
         }
 
-        [Fact(Skip = "for demo purpose only")]
+        [Fact]
+        public void Test()
+        {
+            var l = new List<int>() {1, 2, 3, 4, 5, 6};
+            var s = l.Select(i => i / 2);
+            s.Any(i => i == 2);
+            s.Any(i => i == 2);
+        }
+
+        [Fact]//(Skip = "for demo purpose only")]
         public async Task TestOneThread()
         {
             var constraint = new CountByIntervalAwaitableConstraint(5, TimeSpan.FromSeconds(1));
             var constraint2 = new CountByIntervalAwaitableConstraint(1, TimeSpan.FromMilliseconds(100));
             var timeConstraint = TimeLimiter.Compose(constraint, constraint2);
-
+            timeConstraint.ThrottledObservable.Subscribe(info =>
+                _Output.WriteLine($"Throttling for {info.ThrottledForTimeSpan.TotalMilliseconds} ms"));
             for (var i = 0; i < 1000; i++)
             {
                 await timeConstraint.Enqueue(() => ConsoleIt());
